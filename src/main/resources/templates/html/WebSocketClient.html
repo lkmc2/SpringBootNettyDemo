@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket客户端</title>
+</head>
+<body>
+
+    <div>发送消息</div>
+    <input type="text" id="msgContext">
+    <input type="button" value="点我发送" onclick="CHAT.chat()">
+    <br/>
+    <br/>
+
+    <div>接收消息：</div>
+    <div id="receiveMsg" style="background-color: gainsboro;"></div>
+
+    <script>
+        window.CHAT = {
+            socket: null,
+            // 初始化 WebSocket 连接
+            init: function () {
+                if (window.WebSocket) {
+                    // 创建 WebSocket 连接
+                    CHAT.socket = new WebSocket("ws://127.0.0.1:9999/ws");
+
+                    // 与服务器连接成功的事件
+                    CHAT.socket.onopen = function () {
+                        console.log("连接建立成功...");
+                    };
+
+                    // 接收服务器消息成功的事件
+                    CHAT.socket.onmessage = function (e) {
+                        var msg = e.data;
+                        console.log("接收到消息：" + msg);
+
+                        // 将收到的消息显示到页面中
+                        var receiveMsg = document.getElementById("receiveMsg");
+                        var html = receiveMsg.innerHTML;
+                        receiveMsg.innerHTML = html + "<br/>" + msg;
+                    };
+
+                    // 接收服务器消息失败的事件
+                    CHAT.socket.onerror = function () {
+                        console.log("发生错误...");
+                    };
+
+                    // 与服务器连接关闭的事件
+                    CHAT.socket.onclose = function () {
+                        console.log("连接关闭...");
+                    };
+                } else {
+                    alert("当前浏览器不支持 WebSocket 协议！");
+                }
+            },
+            // 向服务器发送消息
+            chat: function () {
+                // 获取输入框
+                var msg = document.getElementById("msgContext");
+
+                // 发送输入框中的内容给服务端
+                CHAT.socket.send(msg.value)
+            }
+        };
+
+        // 初始化 WebSocket 连接
+        CHAT.init();
+
+        // 设置回车键事件
+        document.onkeydown = function (e) {
+            if (e.keyCode === 13) {
+                CHAT.chat();
+            }
+        };
+
+    </script>
+</body>
+</html>
