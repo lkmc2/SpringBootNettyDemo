@@ -64,7 +64,7 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         // 将当前下文中的通道从 Channel 组中移除
         // 当触发 handlerRemoved ，ChannelGroup 会自动移除对应的客户端的 Channel，remove 方法不需要显式写出
-        // clients.remove(ctx.channel());
+        clients.remove(ctx.channel());
 
         Channel channel = ctx.channel();
 
@@ -74,6 +74,19 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
         // 短 id 如：ac75d5e7
 
         // 短 id 是截取长 id 的最后一段，如果有多个客户端连接时，使用短 id 可能会找到多个不同的客户端
+    }
+
+    /**
+     * 通道发生异常时调用的方法
+     * @param ctx 通道处理上下文
+     * @param cause 发生的异常
+     */
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        // 发生异常之后关闭连接（关闭 Channel）
+        ctx.channel().close();
+        // 将当前的 Channel 从 ChannelGroup 中移除
+        clients.remove(ctx.channel());
     }
 
 }
