@@ -1,7 +1,12 @@
 package com.lin.netty;
+import	java.util.stream.Collectors;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Lists;
 import com.lin.enums.MsgActionEnum;
 import com.lin.netty.model.ChatMsg;
 import com.lin.netty.model.DataContent;
@@ -15,6 +20,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 聊天处理助手类
@@ -75,6 +81,7 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
                 String senderId = chatMsg.getSenderId();
 
                 // 保存消息到数据库，并且标记为【未签收】
+                // 因为不能直接将 Spring 的 bean 对象直接注入当前类，所以需要从持有 Spring 上下文的工具类中获取 bean
 //                UserService userService = SpringUtils.getBean("userServiceImpl", UserService.class);
 //                String msgId = userService.saveMsg(chatMsg);
 //                chatMsg.setMsgId(msgId);
@@ -102,6 +109,35 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
             }
             case SIGNED: {
                 // 2.3 签收消息类型，针对具体的消息进行验收，修改数据库中对应消息的签收状态【已签收】
+                // 因为不能直接将 Spring 的 bean 对象直接注入当前类，所以需要从持有 Spring 上下文的工具类中获取 bean
+//                UserService userService = SpringUtils.getBean("userServiceImpl", UserService.class);
+
+                // 拓展字段 在 signed 类型的消息中，代表需要去签收的消息 id ，逗号间隔
+                String msgIdsStr = dataContent.getExtend();
+                String[] msgIds = msgIdsStr.split(",");
+
+                List<String> msgIdList = Lists.newArrayList();
+
+
+                // 添加非空 id 到列表中（方式1）
+                for (String msgId : msgIds) {
+                    if (StrUtil.isNotBlank(msgId)) {
+                        msgIdList.add(msgId);
+                    }
+                }
+
+                // 添加非空 id 到列表中（方式2）
+//                CollectionUtil.toList(msgIds).stream().filter(StrUtil::isNotBlank).forEach(msgIdList::add);
+
+                // 添加非空 id 到列表中（方式3）
+//                List<String> msgIdList = CollectionUtil.toList(msgIds).stream().filter(StrUtil::isNotBlank).collect(Collectors.toList());
+
+                System.out.println(msgIdList);
+
+                if (CollectionUtil.isNotEmpty(msgIdList) && msgIdList.size() > 0) {
+                    // 批量签收消息
+//                    userService.updateMsgSigned(msgIdList);
+                }
                 break;
             }
             case KEEPALIVE: {
