@@ -1,5 +1,11 @@
 package com.lin.netty;
 
+import cn.hutool.core.util.ObjectUtil;
+import com.alibaba.fastjson.JSON;
+import com.lin.enums.MsgActionEnum;
+import com.lin.netty.model.ChatMsg;
+import com.lin.netty.model.DataContent;
+import com.lin.utils.SpringUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -25,8 +31,8 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame socketFrame) throws Exception {
         // 获取客户端传输过来的消息
-        String content = socketFrame.text();
-        System.out.println("接收到的数据：" + content);
+//        String content = socketFrame.text();
+//        System.out.println("接收到的数据：" + content);
 
         // 向所有客户端刷新同一条消息的方式1
         // 遍历每一个客户端的通道
@@ -38,9 +44,73 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
 //        }
 
         // 向所有客户端刷新同一条消息的方式2
-        clients.writeAndFlush(new TextWebSocketFrame(
-                        String.format("服务器在 【%s】 接受到消息，消息为：【%s】",
-                        LocalDateTime.now(), content)));
+//        clients.writeAndFlush(new TextWebSocketFrame(
+//                        String.format("服务器在 【%s】 接受到消息，消息为：【%s】",
+//                        LocalDateTime.now(), content)));
+
+        // 获取当前通道
+        Channel currentChannel = ctx.channel();
+
+        // 1.获取客户端发来的消息
+        String content = socketFrame.text();
+        DataContent dataContent = JSON.parseObject(content, DataContent.class);
+        Integer action = dataContent.getAction();
+
+        // 2.判断消息类型，根据不同的类型来处理不同的业务
+        switch (MsgActionEnum.getType(action)) {
+            case CONNECT:{
+                // 2.1 当 WebSocket 第一次 open 时，初始化 Channel，把用的 Channel 和 userId 关联起来
+                String senderId = dataContent.getChatMsg().getSenderId();
+                System.out.println("当前发送者的id为：" + senderId);
+
+                // 存储用户和通道的关系
+                UserChannelRelationship.put(senderId, currentChannel);
+                break;
+            }
+            case CHAT: {
+                // 2.2 聊天类型的信息，把聊天记录保存到数据库，同时标记消息的签收状态【未签收】
+                ChatMsg chatMsg = dataContent.getChatMsg();
+                String msg = chatMsg.getMsg();
+                String receiverId = chatMsg.getReceiverId();
+                String senderId = chatMsg.getSenderId();
+
+                // 保存消息到数据库，并且标记为【未签收】
+//                UserService userService = SpringUtils.getBean("userServiceImpl", UserService.class);
+//                String msgId = userService.saveMsg(chatMsg);
+//                chatMsg.setMsgId(msgId);
+                chatMsg.setMsgId("MSG1001");
+
+                // 发送消息
+                // 从全局用户和通道关联关系获取接收方的通道
+                Channel receiverChannel = UserChannelRelationship.get(receiverId);
+
+                if (ObjectUtil.isNull(receiverChannel)) {
+                    // Channel 为空代表用户离线，推送消息（可使用JPush，小米推送等）
+                } else {
+                    // 当 receiverChannel 非空时，去 ChannelGroup 去查找对应 Channel 是否存在
+                    Channel findChannel = clients.find(receiverChannel.id());
+
+                    if (ObjectUtil.isNotNull(findChannel)) {
+                        // 用户在线
+                        // 刷新 json 信息到客户端
+                        receiverChannel.writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(chatMsg)));
+                    } else {
+                        // 用户离线，推送消息
+                    }
+                }
+                break;
+            }
+            case SIGNED: {
+                // 2.3 签收消息类型，针对具体的消息进行验收，修改数据库中对应消息的签收状态【已签收】
+                break;
+            }
+            case KEEPALIVE: {
+                // 2.4 心跳类型的消息
+                break;
+            }
+            default :
+                throw new RuntimeException("找不到对应的消息类型");
+        }
     }
 
     /**
