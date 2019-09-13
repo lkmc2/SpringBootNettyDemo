@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lin.dao.ProjectSummaryDao">
+
+    <resultMap type="com.lin.entity.ProjectSummary" id="IpProjectSummaryMap">
+        <result property="summaryId" column="summary_id" jdbcType="VARCHAR"/>
+        <result property="serialNum" column="serial_num" jdbcType="VARCHAR"/>
+        <result property="hospitalProCode" column="hospital_pro_code" jdbcType="VARCHAR"/>
+        <result property="countryProCode" column="country_pro_code" jdbcType="VARCHAR"/>
+        <result property="projectName" column="project_name" jdbcType="VARCHAR"/>
+        <result property="projectType" column="project_type" jdbcType="VARCHAR"/>
+        <result property="unitPrice" column="unit_price" jdbcType="NUMERIC"/>
+        <result property="quantity" column="quantity" jdbcType="NUMERIC"/>
+        <result property="totalAmount" column="total_amount" jdbcType="NUMERIC"/>
+        <result property="chargeDeptCode" column="charge_dept_code" jdbcType="VARCHAR"/>
+        <result property="chargeDeptName" column="charge_dept_name" jdbcType="VARCHAR"/>
+        <result property="docAdviceName" column="doc_advice_name" jdbcType="VARCHAR"/>
+        <result property="docAdviceNum" column="doc_advice_num" jdbcType="INTEGER"/>
+        <result property="checkReportName" column="check_report_name" jdbcType="VARCHAR"/>
+        <result property="checkReportNum" column="check_report_num" jdbcType="INTEGER"/>
+        <result property="status" column="status" jdbcType="INTEGER"/>
+        <result property="createDate" column="create_date" jdbcType="OTHER"/>
+        <result property="frequency" column="frequency" jdbcType="NUMERIC"/>
+        <result property="dayCountHospitalBeforeAfter" column="day_count_hospital_before_after" jdbcType="INTEGER"/>
+        <result property="orderNo" column="order_no" jdbcType="VARCHAR"/>
+        <result property="orderPriority" column="order_priority" jdbcType="INTEGER"/>
+        <result property="orderStartDateTime" column="order_start_date_time" jdbcType="TIMESTAMP"/>
+        <result property="orderingDept" column="ordering_dept" jdbcType="VARCHAR"/>
+        <result property="orderEndDateTime" column="order_end_date_time" jdbcType="TIMESTAMP"/>
+        <result property="orderDays" column="order_days" jdbcType="INTEGER"/>
+        <result property="orderAmount" column="order_amount" jdbcType="INTEGER"/>
+        <result property="orderHours" column="order_hours" jdbcType="INTEGER"/>
+        <result property="hosUsedQuantity" column="hos_used_quantity" jdbcType="INTEGER"/>
+        <result property="firstUse" column="first_use" jdbcType="VARCHAR"/>
+        <result property="perHourCount" column="per_hour_count" jdbcType="INTEGER"/>
+        <result property="orderPerDayCount" column="order_per_day_count" jdbcType="INTEGER"/>
+        <result property="hospitalDays" column="hospital_days" jdbcType="INTEGER"/>
+        <result property="violateDays" column="violate_days" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <select id="queryList" resultMap="IpProjectSummaryMap">
+        select *
+        from ip_project_summary
+        where summary_id in
+        <foreach collection="list" item="id" open="(" close=")" separator=",">
+           #{id}
+        </foreach>
+    </select>
+
+</mapper>
