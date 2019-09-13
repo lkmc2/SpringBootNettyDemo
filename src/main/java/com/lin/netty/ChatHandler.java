@@ -69,6 +69,14 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
                 String senderId = dataContent.getChatMsg().getSenderId();
                 System.out.println("当前发送者的id为：" + senderId);
 
+                // 测试
+                for (Channel client : clients) {
+                    System.out.println(client.id().asLongText());
+                }
+
+                // 打印用户和通道的所有关联信息
+                UserChannelRelationship.output();
+
                 // 存储用户和通道的关系
                 UserChannelRelationship.put(senderId, currentChannel);
                 break;

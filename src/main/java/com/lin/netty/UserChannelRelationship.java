@@ -34,4 +34,13 @@ public class UserChannelRelationship {
         return map.get(userId);
     }
 
+    /**
+     * 打印用户和通道的所有关联信息
+     */
+    public static void output() {
+        for (Map.Entry<String, Channel> entry : map.entrySet()) {
+            System.out.println(String.format("User Id: %s, Channel Id: %s", entry.getKey(), entry.getValue().id().asLongText()));
+        }
+    }
+
 }
